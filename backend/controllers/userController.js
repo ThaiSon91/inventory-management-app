@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
-// const bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const generateToken = (id) => {
@@ -65,4 +65,55 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser };
+//Login User
+const loginUser = asyncHandler(async (req, res) => {
+  // res.send("Login User");
+  const { email, password } = req.body;
+
+  //Validate Request
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Please add Email and Password");
+  }
+
+  //Check if User exists
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(400);
+    throw new Error("User not found, please signup");
+  }
+
+  //User exists, check if password is correct
+  const passwordIsCorrect = await bcrypt.compare(password, user.password);
+
+  //Generate Token
+  const token = generateToken(user._id);
+
+  //Send HTTP-only cookie
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    expires: new Date(Date.now() + 1000 * 86400), //1 day
+    // sameSite: "none",
+    secure: true,
+  });
+
+  if (user && passwordIsCorrect) {
+    const { _id, name, email, photo, phone, bio } = user;
+    res.status(201).json({
+      _id,
+      name,
+      email,
+      photo,
+      phone,
+      bio,
+      token,
+    });
+  } else {
+    res.status(400);
+    throw new Error("Invalid emaill or password");
+  }
+});
+
+module.exports = { registerUser, loginUser };
