@@ -168,4 +168,16 @@ const loginStatus = asyncHandler(async (req, res) => {
   return res.json(false);
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, loginStatus };
+//Update User
+const updateUser = asyncHandler(async (req, res) => {
+  res.send("User updated");
+});
+
+module.exports = {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getUser,
+  loginStatus,
+  updateUser,
+};
